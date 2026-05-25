@@ -223,14 +223,14 @@ Create a `Makefile` with these targets:
 - `make dream` — python scripts/run_dreaming.py
 - `make lint` — ruff check . --fix && ruff format .
 - `make typecheck` — mypy packages/ api/ --strict
-```
+
 
 **Verify the following is Done:**
 - `make up` starts all 4 services
 - All healthchecks pass within 60 seconds
 - Neo4j browser accessible at localhost:7474
 - LangFuse UI accessible at localhost:3000
-
+```
 ---
 
 ### Task 0.3 — Shared Config (Pydantic Settings)
@@ -258,12 +258,12 @@ Write a unit test in `tests/unit/test_config.py` that:
 - Tests the is_phi_safe_configured computed property
 - Tests URL validators
 Use pytest with monkeypatch to set env vars — do not read from .env in tests.
-```
 
 **Verify the following is Done:**
 - `from clinical_ai_shared.config import settings` works
 - Unit tests pass
 - `mypy packages/shared` passes
+```
 
 ---
 
