@@ -1,0 +1,12 @@
+.env
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+data/episodic_logs/*
+!data/episodic_logs/.gitkeep
+*.egg-info/
+.venv/
+dist/
+node_modules/
+.DS_Store
