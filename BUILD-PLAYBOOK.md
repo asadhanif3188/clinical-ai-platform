@@ -268,7 +268,7 @@ Use pytest with monkeypatch to set env vars — do not read from .env in tests.
 ---
 
 ### Task 0.4 — Database Clients
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
