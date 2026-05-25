@@ -170,7 +170,7 @@ After creating files, verify: `uv sync` would succeed by checking that all packa
 ---
 
 ### Task 0.2 — Docker Compose
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
@@ -234,7 +234,7 @@ Create a `Makefile` with these targets:
 ---
 
 ### Task 0.3 — Shared Config (Pydantic Settings)
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
