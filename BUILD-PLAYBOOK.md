@@ -128,7 +128,7 @@ Each task contains a ready-to-paste prompt and a checkbox to track progress.
 ---
 
 ### Task 0.1 — Monorepo + uv Workspace
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
@@ -162,7 +162,7 @@ Create the following:
 After creating files, verify: `uv sync` would succeed by checking that all package references are resolvable.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `uv sync` installs without errors
 - `from clinical_ai_shared.config import Settings` works in a Python REPL
 - All 5 packages importable
@@ -225,7 +225,7 @@ Create a `Makefile` with these targets:
 - `make typecheck` — mypy packages/ api/ --strict
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `make up` starts all 4 services
 - All healthchecks pass within 60 seconds
 - Neo4j browser accessible at localhost:7474
@@ -260,7 +260,7 @@ Write a unit test in `tests/unit/test_config.py` that:
 Use pytest with monkeypatch to set env vars — do not read from .env in tests.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `from clinical_ai_shared.config import settings` works
 - Unit tests pass
 - `mypy packages/shared` passes
@@ -309,7 +309,7 @@ Each module must:
 - Close connections on app shutdown (register with lifespan events)
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - All 4 modules importable
 - Each has a smoke test in `tests/unit/` that mocks the external connection and verifies the interface
 - `mypy` passes on all 4 files
@@ -345,7 +345,7 @@ Set up Alembic for database migrations and create the initial migration set.
 Run `alembic check` to verify migrations are consistent with models.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `make migrate` runs all migrations without error on the Docker Compose postgres
 - pgvector extension is enabled (migration enables it if not present)
 - AuditLogEntry append-only trigger is verified: UPDATE and DELETE raise exceptions
@@ -382,7 +382,7 @@ Create `packages/shared/src/clinical_ai_shared/schemas/__init__.py` that exports
 Write `tests/unit/test_schemas.py` that round-trips every schema through serialise/deserialise.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - All schemas importable from `clinical_ai_shared.schemas`
 - Round-trip tests pass
 - `mypy` passes
@@ -417,7 +417,7 @@ Write one unit test in `tests/unit/test_logging.py` that verifies:
 - JSON format is valid JSON
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `from clinical_ai_shared.observability.logging import get_logger` works
 - Middleware importable
 - Unit test passes
@@ -456,7 +456,7 @@ Create the FastAPI application in `api/`:
 Verify: `uv run uvicorn api.main:app --reload` starts without errors. `curl localhost:8000/health` returns 200.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `GET /health` → 200
 - `GET /ready` → 200 when Docker services are running, 503 when they are not
 - `/docs` shows Swagger UI
@@ -490,7 +490,7 @@ Add to pyproject.toml [tool.pytest.ini_options]:
 - filterwarnings to suppress known deprecation warnings
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `uv run pytest tests/unit/test_conftest.py -v` passes
 - All fixtures are importable and functional
 - No asyncio warnings
@@ -524,7 +524,7 @@ Set up code quality tooling for the clinical-ai-platform monorepo.
 Run `make check` and verify it passes cleanly on the current codebase.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `make check` exits 0
 - `pre-commit run --all-files` passes
 - No ruff errors, no mypy errors in packages/ and api/
@@ -571,7 +571,7 @@ Create the workflow definition system in `packages/clinflow/src/clinical_ai_clin
    - Test circular dependency detected
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Template YAML parses without error
 - Validation tests pass
 - `mypy` passes
@@ -611,7 +611,7 @@ Also create:
 The engine must NOT know about specific agents — it only calls whatever is in agent_registry.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Unit test: 3-node workflow with mocked agents executes in correct order
 - Unit test: HumanGatewayPause raised at correct node
 - Unit test: resume() continues from correct node after approval
@@ -654,7 +654,7 @@ This function converts a WorkflowDefinition into a LangGraph StateGraph:
 Write a test that builds a graph from the _template.yml workflow and verifies it is a CompiledGraph.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - _template.yml workflow compiles to a runnable LangGraph graph
 - Condition evaluator rejects unsafe expressions (test: `"__import__('os')"` raises SecurityError)
 - `mypy` passes
@@ -693,7 +693,7 @@ Write `tests/integration/test_checkpoint_recovery.py`:
 - Verify workflow completes from node 4, not node 1
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Integration test passes (requires Docker Compose postgres)
 - Checkpoint survives process restart (verified by separate test process)
 - `mypy` passes
@@ -740,7 +740,7 @@ Write `tests/integration/test_human_gateway.py`:
 - Call reject endpoint, verify workflow routes to rejection path
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Integration tests pass
 - Slack/email notification fires (verify via webhook mock in tests)
 - Pending reviews queryable via API
@@ -781,7 +781,7 @@ Write `tests/unit/test_audit_writer.py`:
 - Verify CSV export contains correct headers and row count
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Audit entries written correctly in integration workflow runs
 - CSV export works end-to-end
 - Append-only constraint verified by test
@@ -823,7 +823,7 @@ Write `tests/integration/test_clinflow_end_to_end.py`:
 - Verify it completes and audit trail has 3 entries
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - All endpoints return correct status codes and response schemas
 - Auth middleware rejects requests without valid API key
 - Integration test runs full workflow via API
@@ -873,7 +873,7 @@ Write `tests/unit/test_pdf_parser.py`:
 - Test encrypted PDF returns error gracefully
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Parses a multi-page PDF and returns structured pages
 - OCR fallback works for scanned content
 - Unit tests pass
@@ -915,7 +915,7 @@ Write `tests/unit/test_intake_agent.py`:
 - Test "unknown" classification routes correctly (will be verified in graph test)
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Unit test passes with mocked LLM
 - State TypedDict covers all pipeline fields
 - Audit entry written after classification
@@ -957,7 +957,7 @@ Write `tests/unit/test_lab_report_agent.py`:
 - Test PHI routing to local model
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Unit test passes
 - Retry feedback injected correctly on retry
 - PHI routing test passes
@@ -993,7 +993,7 @@ System prompt: handle common clinical abbreviations (HTN=hypertension, DM2=Type 
 Write `tests/unit/test_clinical_note_agent.py` with a synthetic SOAP note.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Extracts diagnoses, medications, procedures from synthetic note
 - Unit test passes
 
@@ -1025,7 +1025,7 @@ System prompt: extract quantitative results precisely, distinguish primary vs se
 Write `tests/unit/test_trial_summary_agent.py`.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Unit test passes with synthetic trial abstract
 
 ---
@@ -1065,7 +1065,7 @@ Write `tests/unit/test_validation_agent.py`:
 - Test schema validation catches missing required fields
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - All 4 validation paths tested
 - Feedback is specific (not generic "extraction failed") — test verifies feedback mentions the failing field
 
@@ -1108,7 +1108,7 @@ Write `tests/unit/test_report_agent.py` that verifies:
 - All models_used are recorded
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Both report formats generated correctly
 - Provenance present for every extracted field
 
@@ -1142,7 +1142,7 @@ Create the knowledge retrieval tools used by the Validation Agent.
 Write unit tests for both tools. Mock pgvector for knowledge_lookup test.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Knowledge lookup returns results when pgvector is seeded
 - ICD-10 validation correctly identifies valid/invalid codes from the CSV
 - Seed script runs without errors against Docker Compose postgres
@@ -1193,7 +1193,7 @@ Write `tests/integration/test_triage_pipeline.py`:
 - Verify audit trail has entries for every node
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Integration test passes end-to-end
 - Human-in-the-loop pause verified: workflow stops at human_review, resumes after approval
 - Retry loop verified: validation failure routes back to extraction, not past it
@@ -1231,7 +1231,7 @@ Read PRD.md section 10 — ClinicalTriage AI endpoints. Read FR-1 and FR-2 for u
 Run eval against your golden sets and iterate on prompts until F1 ≥ 0.80 for all fields.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - POST /submit accepts PDF, returns job_id
 - GET /{job_id}/report returns Markdown
 - eval_extraction.py reports F1 ≥ 0.80 on all fields across golden sets
@@ -1283,7 +1283,7 @@ File format example:
 Write unit tests for both classes. Working memory test verifies isolation between run_ids. Episodic test verifies files are created in correct path structure.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Episodic log files written to correct path with correct Markdown format
 - Working memory is isolated per run_id
 - Unit tests pass
@@ -1318,7 +1318,7 @@ Export a unified `LongTermMemory` instance that composes both backends.
 Write `tests/unit/test_longterm_memory.py` mocking both pgvector and Neo4j connections.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Store + search round-trip works end-to-end with Docker Compose postgres
 - Neo4j traverse query returns correct paths
 - Forgetting curve reduces importance_score on stale entries
@@ -1351,7 +1351,7 @@ Create:
 Write unit tests for both. Mock pgvector for index test.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Procedural templates saved and loaded correctly from JSON files
 - Dual-channel search returns merged results with RRF scores
 - Unit tests pass
@@ -1420,7 +1420,7 @@ Write `tests/integration/test_memory_consolidation.py`:
 - Verify: deduplication reduces count, at least 1 entry promoted to long-term, stats returned correctly
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Integration test passes
 - Lock prevents concurrent runs (verified by attempting two parallel runs)
 - Promoted entries appear in long-term memory search results
@@ -1455,7 +1455,7 @@ Write `tests/integration/test_memory_consolidation.py`:
    - Verify at least one entry from the run appears in long-term memory search
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Memory endpoints return correct data
 - Episodic logs written automatically during triage pipeline runs
 - Dreaming API endpoint triggers background consolidation
@@ -1493,7 +1493,7 @@ Create the external data source tools for PharmaSafe AI.
 Write unit tests mocking both HTTP clients. Test rate limit handling (429 → retry → success).
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - RxNorm normalises "aspirin" → RXCUI 1191 with standard_name "aspirin"
 - OpenFDA client handles rate limits without raising to caller
 - Caching verified: second call returns cached result without HTTP request
@@ -1545,7 +1545,7 @@ Write unit tests for each agent (mocked LLM and tools).
 Write `tests/integration/test_pharma_pipeline.py` — run full pipeline with known interaction pair (e.g. warfarin + aspirin).
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Warfarin + aspirin test detects HIGH or CRITICAL interaction
 - Integration test produces a RiskAssessmentReport with citations
 - CRITICAL interactions flagged for human review
@@ -1585,7 +1585,7 @@ Write `tests/integration/test_pharma_pipeline.py` — run full pipeline with kno
 Run eval and verify accuracy ≥ 90% on known CRITICAL/HIGH interactions.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Neo4j seeded with drug-enzyme-drug relationships
 - Multi-hop graph traversal returns interaction paths
 - Pharma API endpoints respond correctly
@@ -1646,7 +1646,7 @@ Write `tests/unit/test_model_router.py`:
 - Fallback chain reaches local model when primary fails
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - All agents use router — grep for direct `anthropic.Anthropic()` instantiation outside llm/claude.py (should be zero)
 - Circuit breaker test passes
 - Cost calculated correctly for each model
@@ -1688,7 +1688,7 @@ Read PRD.md section 8 (Observability NFRs) and section 11 (Observability & Monit
 Verify: run a triage job, open LangFuse UI at localhost:3000, confirm trace appears with all spans and costs.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - LangFuse UI shows trace for a triage run with agent spans and LLM generations
 - /metrics endpoint returns Prometheus format
 - Cost per workflow calculable from LangFuse trace
@@ -1726,7 +1726,7 @@ Create GitHub Actions evaluation pipeline.
    - Checklist: [ ] Tests pass, [ ] mypy passes, [ ] eval metrics not regressed, [ ] CLAUDE.md conventions followed, [ ] Audit entries written in new agent nodes
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - CI pipeline runs on push (test with a dummy commit)
 - Integration pipeline posts eval results as PR comment
 - PR template appears on new PRs
@@ -1780,7 +1780,7 @@ Create the Chainlit application in `ui/`:
 Configure Chainlit: create `.chainlit/config.toml` with app name, description, and theme settings.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `chainlit run ui/app.py` starts without errors
 - Upload a synthetic PDF → see classification step → see extraction → see confidence badges
 - APPROVE button resumes the workflow
@@ -1824,7 +1824,7 @@ Create the remaining Chainlit handlers in `ui/handlers/`:
    - Memory consolidation: last run time, promoted count, decayed count
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - All 5 handlers respond to their commands without errors
 - Drug checker shows severity-coloured interactions
 - Workflow monitor shows pending reviews with action buttons
@@ -1860,7 +1860,7 @@ Each page should:
 `npm run dev` should start without errors.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - `npm install && npm run dev` starts at localhost:3001
 - Dashboard page makes a real API call to FastAPI /health and shows response
 - README clearly explains how to complete each page
@@ -1900,7 +1900,7 @@ Read CLAUDE.md. Read PRD.md NFRs for scalability (stateless API + external state
 Build the Docker image and verify it starts correctly: docker run -e ANTHROPIC_API_KEY=... clinical-ai-api
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - Docker image builds successfully in < 10 minutes
 - Container starts and /health returns 200
 - K8s manifests are valid YAML (kubectl apply --dry-run=client -f k8s/ passes)
@@ -1942,7 +1942,7 @@ Prepare the platform for portfolio demo and final review.
 5. Run `pytest tests/evaluation/ -v` and verify F1 ≥ 0.80 for all extraction fields.
 ```
 
-**Done when:**
+**Verify the following is Done:**
 - All 11 smoke test steps work without error
 - README has complete quickstart that a reviewer can follow
 - make check exits 0
