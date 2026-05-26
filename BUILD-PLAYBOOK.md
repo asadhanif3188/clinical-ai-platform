@@ -353,7 +353,7 @@ Run `alembic check` to verify migrations are consistent with models.
 ---
 
 ### Task 0.6 — Shared Pydantic Schemas
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
@@ -385,6 +385,8 @@ Write `tests/unit/test_schemas.py` that round-trips every schema through seriali
 - All schemas importable from `clinical_ai_shared.schemas`
 - Round-trip tests pass
 - `mypy` passes
+
+Then commit all changes
 ```
 
 ---
