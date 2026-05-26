@@ -429,7 +429,7 @@ Then commit all changes
 ---
 
 ### Task 0.8 — FastAPI Skeleton + Health Endpoints
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
