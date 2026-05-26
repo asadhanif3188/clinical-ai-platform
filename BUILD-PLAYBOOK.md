@@ -317,7 +317,7 @@ Each module must:
 ---
 
 ### Task 0.5 — Alembic Migrations
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
