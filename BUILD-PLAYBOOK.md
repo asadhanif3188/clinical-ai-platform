@@ -20,16 +20,16 @@ Each task contains a ready-to-paste prompt and a checkbox to track progress.
 ## Progress Overview
 
 ### Phase 0 — Scaffold & Shared Infrastructure
-- [ ] 0.1 Monorepo + uv workspace
-- [ ] 0.2 Docker Compose (all services)
-- [ ] 0.3 Shared config (Pydantic Settings)
-- [ ] 0.4 Database clients (PostgreSQL, pgvector, Neo4j, Redis)
-- [ ] 0.5 Alembic migrations (initial schema)
-- [ ] 0.6 Shared Pydantic schemas
-- [ ] 0.7 Structured logging
-- [ ] 0.8 FastAPI skeleton + health endpoints
-- [ ] 0.9 Test infrastructure (conftest.py)
-- [ ] 0.10 Ruff + mypy + pre-commit
+- [x] 0.1 Monorepo + uv workspace
+- [x] 0.2 Docker Compose (all services)
+- [x] 0.3 Shared config (Pydantic Settings)
+- [x] 0.4 Database clients (PostgreSQL, pgvector, Neo4j, Redis)
+- [x] 0.5 Alembic migrations (initial schema)
+- [x] 0.6 Shared Pydantic schemas
+- [x] 0.7 Structured logging
+- [x] 0.8 FastAPI skeleton + health endpoints
+- [x] 0.9 Test infrastructure (conftest.py)
+- [x] 0.10 Ruff + mypy + pre-commit
 
 ### Phase 1 — ClinFlow AI (Orchestration Engine)
 - [ ] 1.1 YAML workflow definition + parser
