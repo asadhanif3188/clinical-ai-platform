@@ -392,7 +392,7 @@ Then commit all changes
 ---
 
 ### Task 0.7 — Structured Logging
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
@@ -464,6 +464,7 @@ Verify: `uv run uvicorn api.main:app --reload` starts without errors. `curl loca
 - `GET /ready` → 200 when Docker services are running, 503 when they are not
 - `/docs` shows Swagger UI
 - No mypy errors
+Then commit all changes
 ```
 
 ---
@@ -497,6 +498,7 @@ Add to pyproject.toml [tool.pytest.ini_options]:
 - `uv run pytest tests/unit/test_conftest.py -v` passes
 - All fixtures are importable and functional
 - No asyncio warnings
+Then commit all changes
 ```
 
 ---
@@ -531,6 +533,7 @@ Run `make check` and verify it passes cleanly on the current codebase.
 - `make check` exits 0
 - `pre-commit run --all-files` passes
 - No ruff errors, no mypy errors in packages/ and api/
+Then commit all changes
 ```
 
 ---
@@ -578,6 +581,7 @@ Create the workflow definition system in `packages/clinflow/src/clinical_ai_clin
 - Template YAML parses without error
 - Validation tests pass
 - `mypy` passes
+Then commit all changes
 ```
 
 ---
@@ -619,6 +623,7 @@ The engine must NOT know about specific agents — it only calls whatever is in 
 - Unit test: HumanGatewayPause raised at correct node
 - Unit test: resume() continues from correct node after approval
 - `mypy --strict` passes
+Then commit all changes
 ```
 
 ---
@@ -661,6 +666,7 @@ Write a test that builds a graph from the _template.yml workflow and verifies it
 - _template.yml workflow compiles to a runnable LangGraph graph
 - Condition evaluator rejects unsafe expressions (test: `"__import__('os')"` raises SecurityError)
 - `mypy` passes
+Then commit all changes
 ```
 
 ---
@@ -700,6 +706,7 @@ Write `tests/integration/test_checkpoint_recovery.py`:
 - Integration test passes (requires Docker Compose postgres)
 - Checkpoint survives process restart (verified by separate test process)
 - `mypy` passes
+Then commit all changes
 ```
 
 ---
@@ -742,13 +749,13 @@ Write `tests/integration/test_human_gateway.py`:
 - Start workflow, hit human_gateway node, verify it pauses
 - Call approve endpoint, verify workflow resumes and completes
 - Call reject endpoint, verify workflow routes to rejection path
-```
 
 **Verify the following is Done:**
 - Integration tests pass
 - Slack/email notification fires (verify via webhook mock in tests)
 - Pending reviews queryable via API
-
+Then commit all changes
+```
 ---
 
 ### Task 1.6 — Audit Trail Engine
@@ -783,12 +790,13 @@ Write `tests/unit/test_audit_writer.py`:
 - Verify append-only: attempt UPDATE/DELETE raises exception
 - Verify input_hash is SHA-256 of input, not raw input stored
 - Verify CSV export contains correct headers and row count
-```
 
 **Verify the following is Done:**
 - Audit entries written correctly in integration workflow runs
 - CSV export works end-to-end
 - Append-only constraint verified by test
+Then commit all changes
+```
 
 ---
 
@@ -825,12 +833,13 @@ Write `tests/integration/test_clinflow_end_to_end.py`:
 - Define a simple 3-node test workflow (no real agents — use mock agents)
 - Execute via API
 - Verify it completes and audit trail has 3 entries
-```
 
 **Verify the following is Done:**
 - All endpoints return correct status codes and response schemas
 - Auth middleware rejects requests without valid API key
 - Integration test runs full workflow via API
+Then commit all changes
+```
 
 ---
 
