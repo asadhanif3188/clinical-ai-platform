@@ -1,8 +1,11 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
+
 from clinical_ai_shared.schemas.documents import DocumentType
+
 
 class EpisodicEntry(BaseModel):
     session_id: UUID
@@ -12,7 +15,7 @@ class EpisodicEntry(BaseModel):
     input_summary: str
     output_summary: str
     outcome: str = Field(..., description="'success', 'failure', or 'human_review'")
-    confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
+    confidence: float | None = Field(None, ge=0.0, le=1.0)
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -24,10 +27,11 @@ class EpisodicEntry(BaseModel):
                 "input_summary": "Document upload: report.pdf",
                 "output_summary": "Classified as lab_report",
                 "outcome": "success",
-                "confidence": 0.95
+                "confidence": 0.95,
             }
         }
     )
+
 
 class LongTermEntry(BaseModel):
     entry_id: UUID
@@ -37,7 +41,9 @@ class LongTermEntry(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     last_accessed: datetime = Field(default_factory=datetime.now)
     access_count: int = 0
-    source_episodes: list[UUID] = Field(default_factory=list, description="IDs of source episodic logs")
+    source_episodes: list[UUID] = Field(
+        default_factory=list, description="IDs of source episodic logs"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -49,16 +55,19 @@ class LongTermEntry(BaseModel):
                 "created_at": "2026-05-26T10:00:00Z",
                 "last_accessed": "2026-05-26T10:00:00Z",
                 "access_count": 1,
-                "source_episodes": ["550e8400-e29b-41d4-a716-446655440000"]
+                "source_episodes": ["550e8400-e29b-41d4-a716-446655440000"],
             }
         }
     )
+
 
 class ProceduralTemplate(BaseModel):
     template_id: UUID
     document_type: DocumentType
     format_fingerprint: str = Field(..., description="Hash of document structure pattern")
-    extraction_hints: dict[str, Any] = Field(default_factory=dict, description="Field mapping/hints")
+    extraction_hints: dict[str, Any] = Field(
+        default_factory=dict, description="Field mapping/hints"
+    )
     success_rate: float = Field(0.0, ge=0.0, le=1.0)
     last_updated: datetime = Field(default_factory=datetime.now)
 
@@ -70,10 +79,11 @@ class ProceduralTemplate(BaseModel):
                 "format_fingerprint": "a1b2c3d4",
                 "extraction_hints": {"glucose": "table_cell_1_2"},
                 "success_rate": 0.99,
-                "last_updated": "2026-05-26T10:00:00Z"
+                "last_updated": "2026-05-26T10:00:00Z",
             }
         }
     )
+
 
 class ConsolidationStats(BaseModel):
     scanned: int
@@ -91,10 +101,11 @@ class ConsolidationStats(BaseModel):
                 "reflected": 10,
                 "promoted": 5,
                 "decayed": 2,
-                "run_at": "2026-05-26T02:00:00Z"
+                "run_at": "2026-05-26T02:00:00Z",
             }
         }
     )
+
 
 class MemorySearchResult(BaseModel):
     entry_id: UUID
@@ -108,7 +119,7 @@ class MemorySearchResult(BaseModel):
                 "entry_id": "550e8400-e29b-41d4-a716-446655440001",
                 "content": "Penicillin sensitivity noted",
                 "score": 0.92,
-                "metadata": {"type": "long_term"}
+                "metadata": {"type": "long_term"},
             }
         }
     )

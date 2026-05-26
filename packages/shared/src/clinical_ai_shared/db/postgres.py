@@ -1,20 +1,27 @@
-import structlog
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker, AsyncEngine
-from sqlalchemy.orm import DeclarativeBase
-from tenacity import retry, stop_after_attempt, wait_exponential, before_sleep_log
+from collections.abc import AsyncGenerator
 
 from clinical_ai_shared.config import settings
 from clinical_ai_shared.observability.logging import get_logger
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import DeclarativeBase
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = get_logger(__name__)
+
 
 class Base(DeclarativeBase):
     pass
 
+
 # Global engine and session factory
 _engine: AsyncEngine | None = None
 AsyncSessionLocal: async_sessionmaker[AsyncSession] | None = None
+
 
 def get_engine() -> AsyncEngine:
     global _engine
@@ -27,6 +34,7 @@ def get_engine() -> AsyncEngine:
         )
     return _engine
 
+
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
     global AsyncSessionLocal
     if AsyncSessionLocal is None:
@@ -37,6 +45,7 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
             class_=AsyncSession,
         )
     return AsyncSessionLocal
+
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """Async generator for FastAPI Depends()"""
@@ -51,12 +60,12 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
+
 @retry(
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=2, max=10),
     before_sleep=lambda retry_state: logger.info(
-        "retrying_postgres_operation", 
-        attempt=retry_state.attempt_number
+        "retrying_postgres_operation", attempt=retry_state.attempt_number
     ),
 )
 async def init_db() -> None:
@@ -70,6 +79,7 @@ async def init_db() -> None:
     except Exception as e:
         logger.error("database_initialization_failed", error=str(e))
         raise
+
 
 async def close_db() -> None:
     """Close the database engine."""

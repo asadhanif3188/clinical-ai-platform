@@ -10,7 +10,7 @@ logs:
 	docker-compose logs -f
 
 dev:
-	uv run uvicorn api.main:app --reload --port 8000 & uv run chainlit run ui/app.py --port 8001
+	uv run uvicorn api.main:app --reload --port 8000
 
 test:
 	uv run pytest tests/unit/ -v
@@ -18,10 +18,14 @@ test:
 test-integration:
 	uv run pytest tests/integration/ -v
 
-check: lint typecheck test
+check:
+	uv run ruff check .
+	uv run ruff format --check .
+	uv run mypy packages/ api/ --strict
+	uv run pytest tests/unit/ -q
 
 migrate:
-	uv run alembic upgrade head
+	uv run python -m alembic upgrade head
 
 seed:
 	uv run python scripts/seed_neo4j.py
@@ -35,4 +39,4 @@ lint:
 	uv run ruff format .
 
 typecheck:
-	uv run mypy clinical_ai_shared clinical_ai_clinflow clinical_ai_memory clinical_ai_triage clinical_ai_pharma --strict
+	uv run mypy packages/ api/ --strict

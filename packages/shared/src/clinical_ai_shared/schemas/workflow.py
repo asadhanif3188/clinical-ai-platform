@@ -1,14 +1,17 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Literal
+from typing import Any
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class WorkflowStatus(str, Enum):
     RUNNING = "running"
     PAUSED = "paused"
     COMPLETED = "completed"
     FAILED = "failed"
+
 
 class WorkflowState(BaseModel):
     run_id: UUID
@@ -28,46 +31,53 @@ class WorkflowState(BaseModel):
                 "current_node": "intake_agent",
                 "checkpoint": {"messages": [], "retry_count": 0},
                 "started_at": "2026-05-26T10:00:00Z",
-                "updated_at": "2026-05-26T10:05:00Z"
+                "updated_at": "2026-05-26T10:05:00Z",
             }
         }
     )
+
 
 class NodeType(str, Enum):
     AGENT = "agent"
     HUMAN_GATEWAY = "human_gateway"
 
+
 class RetryConfig(BaseModel):
     max_attempts: int = 3
     backoff_seconds: int = 5
 
+
 class NotificationConfig(BaseModel):
     channel: str
     message: str
+
 
 class NodeDefinition(BaseModel):
     id: str
     agent: str
     type: NodeType = NodeType.AGENT
     timeout_seconds: int = 60
-    retry: Optional[RetryConfig] = None
-    notification: Optional[NotificationConfig] = None
+    retry: RetryConfig | None = None
+    notification: NotificationConfig | None = None
+
 
 class EdgeDefinition(BaseModel):
     from_node: str
     to_node: str
-    condition: Optional[str] = None
+    condition: str | None = None
     max_loops: int = 3
+
 
 class StateFieldDefinition(BaseModel):
     name: str
     type_hint: str
     nullable: bool = True
 
+
 class WorkflowDefinition(BaseModel):
     name: str
     version: str
-    description: Optional[str] = None
+    description: str | None = None
     state_schema: list[StateFieldDefinition]
     nodes: list[NodeDefinition]
     edges: list[EdgeDefinition]
@@ -79,10 +89,11 @@ class WorkflowDefinition(BaseModel):
                 "version": "1.0.0",
                 "state_schema": [{"name": "document_id", "type_hint": "str"}],
                 "nodes": [{"id": "intake", "agent": "intake_agent"}],
-                "edges": [{"from_node": "intake", "to_node": "END"}]
+                "edges": [{"from_node": "intake", "to_node": "END"}],
             }
         }
     )
+
 
 class NodeResult(BaseModel):
     node_id: str
@@ -98,7 +109,7 @@ class NodeResult(BaseModel):
                 "output": {"document_type": "lab_report"},
                 "cost_usd": 0.002,
                 "duration_ms": 1500,
-                "timestamp": "2026-05-26T10:00:00Z"
+                "timestamp": "2026-05-26T10:00:00Z",
             }
         }
     )

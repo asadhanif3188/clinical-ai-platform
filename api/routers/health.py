@@ -1,16 +1,19 @@
 from typing import Any
+
+from clinical_ai_shared.db.neo4j import execute_query
+from clinical_ai_shared.db.postgres import get_session_factory
+from clinical_ai_shared.db.redis import get_redis
 from fastapi import APIRouter, Response, status
 from sqlalchemy import text
-from clinical_ai_shared.db.postgres import get_session_factory
-from clinical_ai_shared.db.neo4j import execute_query
-from clinical_ai_shared.db.redis import get_redis
 
 router = APIRouter(tags=["Health"])
+
 
 @router.get("/health")
 async def health_check() -> dict[str, str]:
     """Liveness probe - always returns 200."""
     return {"status": "ok", "version": "0.1.0"}
+
 
 @router.get("/ready")
 async def readiness_check(response: Response) -> dict[str, Any]:
@@ -53,5 +56,5 @@ async def readiness_check(response: Response) -> dict[str, Any]:
     response.status_code = status_code
     return {
         "status": "ready" if status_code == status.HTTP_200_OK else "not_ready",
-        "services": health
+        "services": health,
     }

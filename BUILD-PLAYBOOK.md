@@ -470,7 +470,7 @@ Then commit all changes
 ---
 
 ### Task 0.9 — Test Infrastructure
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
@@ -504,7 +504,7 @@ Then commit all changes
 ---
 
 ### Task 0.10 — Ruff + mypy + pre-commit
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```

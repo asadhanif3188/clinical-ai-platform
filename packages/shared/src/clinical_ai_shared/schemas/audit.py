@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class AuditLogEntry(BaseModel):
     entry_id: UUID = Field(..., description="Immutable UUID")
@@ -10,13 +11,13 @@ class AuditLogEntry(BaseModel):
     node: str
     input_hash: str = Field(..., description="SHA-256 of input (not stored raw — privacy)")
     output_summary: str
-    model_used: Optional[str] = None
+    model_used: str | None = None
     tokens_used: int = 0
     cost_usd: float = 0.0
     duration_ms: int = 0
     timestamp: datetime = Field(default_factory=datetime.now)
-    human_decision: Optional[str] = Field(None, description="If HITL node")
-    human_reviewer: Optional[str] = Field(None, description="If HITL node")
+    human_decision: str | None = Field(None, description="If HITL node")
+    human_reviewer: str | None = Field(None, description="If HITL node")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -31,41 +32,32 @@ class AuditLogEntry(BaseModel):
                 "tokens_used": 500,
                 "cost_usd": 0.0005,
                 "duration_ms": 800,
-                "timestamp": "2026-05-26T10:00:00Z"
+                "timestamp": "2026-05-26T10:00:00Z",
             }
         }
     )
 
+
 class AuditQuery(BaseModel):
-    run_id: Optional[UUID] = None
-    agent: Optional[str] = None
-    node: Optional[str] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    run_id: UUID | None = None
+    agent: str | None = None
+    node: str | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     page: int = 1
     page_size: int = 20
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "agent": "intake_agent",
-                "page": 1,
-                "page_size": 20
-            }
-        }
+        json_schema_extra={"example": {"agent": "intake_agent", "page": 1, "page_size": 20}}
     )
 
+
 class AuditExportRequest(BaseModel):
-    run_id: Optional[UUID] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    run_id: UUID | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     format: str = "csv"
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "format": "csv",
-                "start_date": "2026-05-01T00:00:00Z"
-            }
-        }
+        json_schema_extra={"example": {"format": "csv", "start_date": "2026-05-01T00:00:00Z"}}
     )

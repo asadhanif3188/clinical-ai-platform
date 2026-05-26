@@ -1,7 +1,6 @@
 import logging
-import sys
 from contextvars import ContextVar
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 from structlog.types import Processor
@@ -9,13 +8,16 @@ from structlog.types import Processor
 from clinical_ai_shared.config import settings
 
 # Context variable to store correlation_id
-correlation_id_ctx: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+correlation_id_ctx: ContextVar[str | None] = ContextVar("correlation_id", default=None)
+
 
 def set_correlation_id(correlation_id: str) -> None:
     correlation_id_ctx.set(correlation_id)
 
-def get_correlation_id() -> Optional[str]:
+
+def get_correlation_id() -> str | None:
     return correlation_id_ctx.get()
+
 
 def add_correlation_id(
     _logger: logging.Logger, _method_name: str, event_dict: dict[str, Any]
@@ -25,6 +27,7 @@ def add_correlation_id(
     if correlation_id:
         event_dict["correlation_id"] = correlation_id
     return event_dict
+
 
 def configure_logging() -> None:
     """Configure structlog based on settings."""
@@ -54,11 +57,12 @@ def configure_logging() -> None:
         cache_logger_on_first_use=True,
     )
 
-def get_logger(name: Optional[str] = None) -> structlog.BoundLogger:
+
+def get_logger(name: str | None = None) -> structlog.BoundLogger:
     """Get a structured logger."""
     # Ensure logging is configured
     if not structlog.is_configured():
         configure_logging()
-    
+
     logger = structlog.get_logger(name)
     return logger

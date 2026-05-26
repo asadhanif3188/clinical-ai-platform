@@ -1,16 +1,19 @@
-from typing import Optional
+from dataclasses import dataclass
+
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from dataclasses import dataclass
+
 
 @dataclass(frozen=True)
 class AnthropicSettings:
     api_key: str
 
+
 @dataclass(frozen=True)
 class DatabaseSettings:
     url: str
     pgvector_url: str
+
 
 @dataclass(frozen=True)
 class Neo4jSettings:
@@ -18,9 +21,11 @@ class Neo4jSettings:
     user: str
     password: str
 
+
 @dataclass(frozen=True)
 class RedisSettings:
     url: str
+
 
 @dataclass(frozen=True)
 class LangfuseSettings:
@@ -28,15 +33,18 @@ class LangfuseSettings:
     secret_key: str
     host: str
 
+
 @dataclass(frozen=True)
 class LocalModelSettings:
     phi_model: str
     ollama_base_url: str
 
+
 @dataclass(frozen=True)
 class NotificationSettings:
-    slack_webhook_url: Optional[str]
-    notification_email: Optional[str]
+    slack_webhook_url: str | None
+    notification_email: str | None
+
 
 class Settings(BaseSettings):
     # System
@@ -68,14 +76,10 @@ class Settings(BaseSettings):
     ollama_base_url: str = Field(alias="OLLAMA_BASE_URL")
 
     # Notifications (Optional)
-    slack_webhook_url: Optional[str] = Field(alias="SLACK_WEBHOOK_URL", default=None)
-    notification_email: Optional[str] = Field(alias="NOTIFICATION_EMAIL", default=None)
+    slack_webhook_url: str | None = Field(alias="SLACK_WEBHOOK_URL", default=None)
+    notification_email: str | None = Field(alias="NOTIFICATION_EMAIL", default=None)
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @property
     def anthropic(self) -> AnthropicSettings:
@@ -83,18 +87,11 @@ class Settings(BaseSettings):
 
     @property
     def database(self) -> DatabaseSettings:
-        return DatabaseSettings(
-            url=self.database_url,
-            pgvector_url=self.pgvector_database_url
-        )
+        return DatabaseSettings(url=self.database_url, pgvector_url=self.pgvector_database_url)
 
     @property
     def neo4j(self) -> Neo4jSettings:
-        return Neo4jSettings(
-            uri=self.neo4j_uri,
-            user=self.neo4j_user,
-            password=self.neo4j_password
-        )
+        return Neo4jSettings(uri=self.neo4j_uri, user=self.neo4j_user, password=self.neo4j_password)
 
     @property
     def redis(self) -> RedisSettings:
@@ -105,21 +102,17 @@ class Settings(BaseSettings):
         return LangfuseSettings(
             public_key=self.langfuse_public_key,
             secret_key=self.langfuse_secret_key,
-            host=self.langfuse_host
+            host=self.langfuse_host,
         )
 
     @property
     def local_model(self) -> LocalModelSettings:
-        return LocalModelSettings(
-            phi_model=self.phi_model,
-            ollama_base_url=self.ollama_base_url
-        )
+        return LocalModelSettings(phi_model=self.phi_model, ollama_base_url=self.ollama_base_url)
 
     @property
     def notifications(self) -> NotificationSettings:
         return NotificationSettings(
-            slack_webhook_url=self.slack_webhook_url,
-            notification_email=self.notification_email
+            slack_webhook_url=self.slack_webhook_url, notification_email=self.notification_email
         )
 
     @property
@@ -140,8 +133,10 @@ class Settings(BaseSettings):
             raise ValueError("REDIS_URL must start with 'redis://'")
         return v
 
+
 def get_settings() -> Settings:
     return Settings()
+
 
 try:
     settings = get_settings()

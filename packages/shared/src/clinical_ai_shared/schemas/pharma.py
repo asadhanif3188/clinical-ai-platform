@@ -1,8 +1,9 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Any
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class InteractionSeverity(str, Enum):
     CRITICAL = "CRITICAL"
@@ -10,23 +11,21 @@ class InteractionSeverity(str, Enum):
     MODERATE = "MODERATE"
     LOW = "LOW"
 
+
 class MedicationInput(BaseModel):
     name: str
-    dose: Optional[str] = None
-    frequency: Optional[str] = None
+    dose: str | None = None
+    frequency: str | None = None
 
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {
-                "name": "Warfarin",
-                "dose": "5mg",
-                "frequency": "Once daily"
-            }
+            "example": {"name": "Warfarin", "dose": "5mg", "frequency": "Once daily"}
         }
     )
 
+
 class NormalizedMedication(BaseModel):
-    rxcui: Optional[str] = None
+    rxcui: str | None = None
     name: str
     standard_name: str
     confidence: float = Field(..., ge=0.0, le=1.0)
@@ -37,18 +36,19 @@ class NormalizedMedication(BaseModel):
                 "rxcui": "11289",
                 "name": "Warfarin",
                 "standard_name": "warfarin",
-                "confidence": 1.0
+                "confidence": 1.0,
             }
         }
     )
+
 
 class DrugInteraction(BaseModel):
     drug_a: str
     drug_b: str
     severity: InteractionSeverity
-    mechanism: Optional[str] = None
-    clinical_significance: Optional[str] = None
-    source_url: Optional[str] = None
+    mechanism: str | None = None
+    clinical_significance: str | None = None
+    source_url: str | None = None
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -58,10 +58,11 @@ class DrugInteraction(BaseModel):
                 "severity": "HIGH",
                 "mechanism": "Increased risk of bleeding",
                 "clinical_significance": "Use with caution",
-                "source_url": "https://api.fda.gov/..."
+                "source_url": "https://api.fda.gov/...",
             }
         }
     )
+
 
 class RiskAssessmentReport(BaseModel):
     report_id: UUID
@@ -79,7 +80,7 @@ class RiskAssessmentReport(BaseModel):
                 "interactions": [],
                 "summary": "No critical interactions found",
                 "recommendations": ["Continue as prescribed"],
-                "generated_at": "2026-05-26T10:00:00Z"
+                "generated_at": "2026-05-26T10:00:00Z",
             }
         }
     )

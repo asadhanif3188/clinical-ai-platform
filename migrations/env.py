@@ -1,23 +1,22 @@
 import asyncio
 import sys
-from pathlib import Path
 from logging.config import fileConfig
+from pathlib import Path
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
-from alembic import context
 
 # Add the project root and packages/shared/src to sys.path
 root_path = Path(__file__).parent.parent.resolve()
 sys.path.append(str(root_path))
 sys.path.append(str(root_path / "packages" / "shared" / "src"))
 
-from clinical_ai_shared.config import settings
-from clinical_ai_shared.db.postgres import Base
 # Import models to ensure they are registered with Base.metadata
 import clinical_ai_shared.db.models  # noqa
+from clinical_ai_shared.config import settings
+from clinical_ai_shared.db.postgres import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -46,6 +45,7 @@ def include_object(object, name, type_, reflected, compare_to):
         return name in target_metadata.tables
     return True
 
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
     url = config.get_main_option("sqlalchemy.url")
@@ -63,7 +63,7 @@ def run_migrations_offline() -> None:
 
 def do_run_migrations(connection: Connection) -> None:
     context.configure(
-        connection=connection, 
+        connection=connection,
         target_metadata=target_metadata,
         include_object=include_object,
     )

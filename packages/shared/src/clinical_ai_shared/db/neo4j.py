@@ -1,14 +1,16 @@
-from typing import Optional, Any, List, Dict, AsyncIterator, cast
-from neo4j import AsyncGraphDatabase, AsyncDriver, AsyncSession
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from tenacity import retry, stop_after_attempt, wait_exponential
+from typing import Any, cast
 
 from clinical_ai_shared.config import settings
 from clinical_ai_shared.observability.logging import get_logger
+from neo4j import AsyncDriver, AsyncGraphDatabase, AsyncSession
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = get_logger(__name__)
 
-_driver: Optional[AsyncDriver] = None
+_driver: AsyncDriver | None = None
+
 
 def get_driver() -> AsyncDriver:
     """Get or create the Neo4j async driver singleton."""
@@ -21,6 +23,7 @@ def get_driver() -> AsyncDriver:
         )
     return _driver
 
+
 @asynccontextmanager
 async def neo4j_session() -> AsyncIterator[AsyncSession]:
     """Context manager for Neo4j async sessions."""
@@ -31,24 +34,25 @@ async def neo4j_session() -> AsyncIterator[AsyncSession]:
     finally:
         await session.close()
 
+
 @retry(
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=2, max=10),
     before_sleep=lambda retry_state: logger.info(
-        "retrying_neo4j_operation", 
-        attempt=retry_state.attempt_number
+        "retrying_neo4j_operation", attempt=retry_state.attempt_number
     ),
 )
-async def execute_query(cypher: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+async def execute_query(cypher: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Execute a Cypher query and return the results as a list of dictionaries."""
     async with neo4j_session() as session:
         try:
             result = await session.run(cypher, params or {})
             records = await result.data()
-            return cast(List[Dict[str, Any]], records)
+            return cast("list[dict[str, Any]]", records)
         except Exception as e:
             logger.error("neo4j_query_failed", cypher=cypher, error=str(e))
             raise
+
 
 async def close_driver() -> None:
     """Close the Neo4j driver."""

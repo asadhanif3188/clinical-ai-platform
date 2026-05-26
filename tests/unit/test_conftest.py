@@ -1,14 +1,14 @@
 import pytest
-import pytest_asyncio
+
 
 @pytest.mark.asyncio
 async def test_fixtures_smoke(
-    mock_settings, 
-    mock_anthropic, 
-    db_session, 
-    redis_mock, 
-    sample_lab_report_state, 
-    sample_medication_list
+    mock_settings,
+    mock_anthropic,
+    db_session,
+    redis_mock,
+    sample_lab_report_state,
+    sample_medication_list,
 ):
     assert mock_settings.anthropic_api_key == "test-key"
     assert mock_anthropic is not None

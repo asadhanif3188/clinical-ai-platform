@@ -1,14 +1,16 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+
+from clinical_ai_shared.config import settings
+from clinical_ai_shared.db.neo4j import close_driver
+from clinical_ai_shared.db.postgres import close_db
+from clinical_ai_shared.db.redis import close_redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from clinical_ai_shared.config import settings
-from clinical_ai_shared.db.postgres import close_db
-from clinical_ai_shared.db.neo4j import close_driver
-from clinical_ai_shared.db.redis import close_redis
 from api.middleware import CorrelationIdMiddleware, RequestLoggingMiddleware
 from api.routers import health
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -19,6 +21,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await close_db()
     await close_driver()
     await close_redis()
+
 
 app = FastAPI(
     title="Clinical AI Platform API",
@@ -45,4 +48,5 @@ app.include_router(health.router)
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
