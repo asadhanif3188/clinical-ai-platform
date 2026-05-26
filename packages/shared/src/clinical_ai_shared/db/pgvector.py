@@ -1,99 +1,164 @@
-from typing import Any, Optional
-from pydantic import BaseModel
+from typing import List, Optional, Dict, Any, cast
+from dataclasses import dataclass
+import uuid
+import structlog
+from sqlalchemy import Column, String, Float, JSON, UUID, select, delete as sqlalchemy_delete, text
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker, AsyncEngine
+from sqlalchemy.orm import DeclarativeBase
+from pgvector.sqlalchemy import Vector # type: ignore
 from sentence_transformers import SentenceTransformer
-from sqlalchemy import text
 from tenacity import retry, stop_after_attempt, wait_exponential
-from clinical_ai_shared.db.postgres import AsyncSessionLocal
+
+from clinical_ai_shared.config import settings
 from clinical_ai_shared.observability.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Use a local model as mandated by D-1 and PRD
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Model for local embeddings
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+embedding_model: Optional[SentenceTransformer] = None
 
-class VectorSearchResult(BaseModel):
+def get_embedding_model() -> SentenceTransformer:
+    global embedding_model
+    if embedding_model is None:
+        logger.info("loading_embedding_model", model=EMBEDDING_MODEL_NAME)
+        embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    return embedding_model
+
+@dataclass
+class VectorSearchResult:
     entry_id: str
     content: str
     score: float
-    metadata: dict[str, Any]
+    metadata: Dict[str, Any]
+
+class VectorBase(DeclarativeBase):
+    pass
+
+class VectorStoreEntry(VectorBase):
+    __tablename__ = "vector_store"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    content = Column(String, nullable=False)
+    metadata_json = Column(JSON, nullable=False, default={})
+    embedding = Column(Vector(384)) # all-MiniLM-L6-v2 produces 384-dimensional vectors
+
+_vector_engine: Optional[AsyncEngine] = None
+AsyncSessionLocal: Optional[async_sessionmaker[AsyncSession]] = None
+
+def get_vector_engine() -> AsyncEngine:
+    global _vector_engine
+    if _vector_engine is None:
+        logger.info("creating_pgvector_engine", url=settings.pgvector_database_url)
+        _vector_engine = create_async_engine(
+            settings.pgvector_database_url,
+            pool_pre_ping=True,
+            echo=False,
+        )
+    return _vector_engine
+
+def get_vector_session_factory() -> async_sessionmaker[AsyncSession]:
+    global AsyncSessionLocal
+    if AsyncSessionLocal is None:
+        engine = get_vector_engine()
+        AsyncSessionLocal = async_sessionmaker(
+            engine,
+            expire_on_commit=False,
+            class_=AsyncSession,
+        )
+    return AsyncSessionLocal
 
 @retry(
-    stop=stop_after_attempt(3),
+    stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=2, max=10),
+    before_sleep=lambda retry_state: logger.info(
+        "retrying_pgvector_operation", 
+        attempt=retry_state.attempt_number
+    ),
 )
-async def embed_and_store(content: str, metadata: dict[str, Any]) -> str:
-    logger.info("embedding_and_storing_vector", content_length=len(content))
-    embedding_raw = embedding_model.encode(content)
-    embedding = embedding_raw.tolist() if hasattr(embedding_raw, "tolist") else list(embedding_raw)
+async def init_vector_db() -> None:
+    """Initialize the vector database, enabling pgvector extension."""
+    engine = get_vector_engine()
+    logger.info("initializing_vector_database")
+    async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        await conn.run_sync(VectorBase.metadata.create_all)
+    logger.info("vector_database_initialized")
+
+async def embed_and_store(text: str, metadata: Dict[str, Any]) -> str:
+    """Embed text and store it in the vector database."""
+    model = get_embedding_model()
+    embedding = model.encode(text).tolist()
     
-    async with AsyncSessionLocal() as session:
-        query = text("""
-            INSERT INTO vector_entries (content, metadata, embedding)
-            VALUES (:content, :metadata, :embedding)
-            RETURNING id
-        """)
-        result = await session.execute(
-            query,
-            {"content": content, "metadata": metadata, "embedding": embedding}
+    factory = get_vector_session_factory()
+    async with factory() as session:
+        entry = VectorStoreEntry(
+            content=text,
+            metadata_json=metadata,
+            embedding=embedding
         )
-        entry_id = str(result.scalar_one())
+        session.add(entry)
         await session.commit()
-        logger.info("vector_stored", entry_id=entry_id)
+        await session.refresh(entry)
+        entry_id = str(entry.id)
+        logger.info("stored_vector_entry", entry_id=entry_id)
         return entry_id
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
-)
 async def search(
     query_text: str, 
     top_k: int = 5, 
-    filter_metadata: Optional[dict[str, Any]] = None
-) -> list[VectorSearchResult]:
-    logger.info("searching_vectors", query=query_text, top_k=top_k)
-    query_embedding_raw = embedding_model.encode(query_text)
-    query_embedding = query_embedding_raw.tolist() if hasattr(query_embedding_raw, "tolist") else list(query_embedding_raw)
+    filter_metadata: Optional[Dict[str, Any]] = None
+) -> List[VectorSearchResult]:
+    """Search for similar content in the vector database."""
+    model = get_embedding_model()
+    query_embedding = model.encode(query_text).tolist()
     
-    async with AsyncSessionLocal() as session:
-        # Assuming pgvector extension is installed and <=> is cosine distance
-        # Metadata filtering would be more complex in real SQL, here simplified
-        sql = """
-            SELECT id, content, metadata, 1 - (embedding <=> :embedding) as score
-            FROM vector_entries
-            ORDER BY embedding <=> :embedding
-            LIMIT :top_k
-        """
-        result = await session.execute(
-            text(sql),
-            {"embedding": query_embedding, "top_k": top_k}
-        )
+    factory = get_vector_session_factory()
+    async with factory() as session:
+        # L2 distance search
+        query = select(
+            VectorStoreEntry,
+            VectorStoreEntry.embedding.l2_distance(query_embedding).label("distance")
+        ).order_by("distance").limit(top_k)
+        
+        # Note: metadata filtering could be added here using JSONB operators if needed
+        # For now, we'll stick to basic search as requested.
+        
+        result = await session.execute(query)
+        rows = result.all()
         
         search_results = [
             VectorSearchResult(
-                entry_id=str(row[0]),
-                content=row[1],
-                metadata=row[2],
-                score=float(row[3])
+                entry_id=str(row[0].id),
+                content=row[0].content,
+                score=float(row[1]), # In L2, lower is better, but this is the "distance"
+                metadata=row[0].metadata_json
             )
-            for row in result.all()
+            for row in rows
         ]
-        logger.info("vector_search_completed", results_count=len(search_results))
         return search_results
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
-)
 async def delete(entry_id: str) -> bool:
-    logger.info("deleting_vector", entry_id=entry_id)
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            text("DELETE FROM vector_entries WHERE id = :id"),
-            {"id": entry_id}
-        )
-        await session.commit()
-        from typing import Any as typing_Any, cast
-        rowcount = int(cast(typing_Any, result).rowcount)
-        success = rowcount > 0
-        logger.info("vector_deletion_completed", entry_id=entry_id, success=success)
-        return success
+    """Delete an entry from the vector database."""
+    factory = get_vector_session_factory()
+    async with factory() as session:
+        try:
+            stmt = sqlalchemy_delete(VectorStoreEntry).where(VectorStoreEntry.id == uuid.UUID(entry_id))
+            result = await session.execute(stmt)
+            await session.commit()
+            success = cast(int, result.rowcount) > 0
+            logger.info("deleted_vector_entry", entry_id=entry_id, success=success)
+            return success
+        except Exception as e:
+            logger.error("delete_vector_entry_failed", entry_id=entry_id, error=str(e))
+            return False
+
+async def close_vector_db() -> None:
+    """Close the vector database engine."""
+    global _vector_engine
+    if _vector_engine:
+        logger.info("closing_pgvector_engine")
+        await _vector_engine.dispose()
+        _vector_engine = None
+        logger.info("pgvector_engine_closed")
+

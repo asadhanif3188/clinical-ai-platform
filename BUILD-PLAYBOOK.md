@@ -307,13 +307,13 @@ Each module must:
 - Log connection events with structured logging
 - Handle connection errors gracefully with retry logic (tenacity)
 - Close connections on app shutdown (register with lifespan events)
-```
+
 
 **Verify the following is Done:**
 - All 4 modules importable
 - Each has a smoke test in `tests/unit/` that mocks the external connection and verifies the interface
 - `mypy` passes on all 4 files
-
+```
 ---
 
 ### Task 0.5 — Alembic Migrations
@@ -343,12 +343,12 @@ Set up Alembic for database migrations and create the initial migration set.
    - 004_workflow_state.py — indexes on WorkflowRun(status), WorkflowRun(workflow_name)
 
 Run `alembic check` to verify migrations are consistent with models.
-```
 
 **Verify the following is Done:**
 - `make migrate` runs all migrations without error on the Docker Compose postgres
 - pgvector extension is enabled (migration enables it if not present)
 - AuditLogEntry append-only trigger is verified: UPDATE and DELETE raise exceptions
+```
 
 ---
 
@@ -380,12 +380,12 @@ Requirements for all schemas:
 Create `packages/shared/src/clinical_ai_shared/schemas/__init__.py` that exports all schemas.
 
 Write `tests/unit/test_schemas.py` that round-trips every schema through serialise/deserialise.
-```
 
 **Verify the following is Done:**
 - All schemas importable from `clinical_ai_shared.schemas`
 - Round-trip tests pass
 - `mypy` passes
+```
 
 ---
 
@@ -415,12 +415,12 @@ Write one unit test in `tests/unit/test_logging.py` that verifies:
 - get_logger() returns a logger
 - Log output includes correlation_id when set
 - JSON format is valid JSON
-```
 
 **Verify the following is Done:**
 - `from clinical_ai_shared.observability.logging import get_logger` works
 - Middleware importable
 - Unit test passes
+```
 
 ---
 
@@ -454,13 +454,13 @@ Create the FastAPI application in `api/`:
    - Re-export CorrelationIdMiddleware and RequestLoggingMiddleware from shared
 
 Verify: `uv run uvicorn api.main:app --reload` starts without errors. `curl localhost:8000/health` returns 200.
-```
 
 **Verify the following is Done:**
 - `GET /health` → 200
 - `GET /ready` → 200 when Docker services are running, 503 when they are not
 - `/docs` shows Swagger UI
 - No mypy errors
+```
 
 ---
 
@@ -488,12 +488,12 @@ Create `tests/unit/test_conftest.py` with a smoke test that verifies all fixture
 Add to pyproject.toml [tool.pytest.ini_options]:
 - markers for slow, integration, evaluation tests
 - filterwarnings to suppress known deprecation warnings
-```
 
 **Verify the following is Done:**
 - `uv run pytest tests/unit/test_conftest.py -v` passes
 - All fixtures are importable and functional
 - No asyncio warnings
+```
 
 ---
 
@@ -522,12 +522,12 @@ Set up code quality tooling for the clinical-ai-platform monorepo.
 5. Fix any existing mypy or ruff errors in the files created so far.
 
 Run `make check` and verify it passes cleanly on the current codebase.
-```
 
 **Verify the following is Done:**
 - `make check` exits 0
 - `pre-commit run --all-files` passes
 - No ruff errors, no mypy errors in packages/ and api/
+```
 
 ---
 
@@ -569,12 +569,12 @@ Create the workflow definition system in `packages/clinflow/src/clinical_ai_clin
    - Test missing required fields raises ValidationError
    - Test dangling edge raises ValidationError
    - Test circular dependency detected
-```
 
 **Verify the following is Done:**
 - Template YAML parses without error
 - Validation tests pass
 - `mypy` passes
+```
 
 ---
 
@@ -609,13 +609,13 @@ Also create:
 - `HumanDecision` dataclass with decision ("approved"/"rejected"), reviewer_id, edits (optional state overrides)
 
 The engine must NOT know about specific agents — it only calls whatever is in agent_registry.
-```
 
 **Verify the following is Done:**
 - Unit test: 3-node workflow with mocked agents executes in correct order
 - Unit test: HumanGatewayPause raised at correct node
 - Unit test: resume() continues from correct node after approval
 - `mypy --strict` passes
+```
 
 ---
 
@@ -652,12 +652,12 @@ This function converts a WorkflowDefinition into a LangGraph StateGraph:
 6. Compile with checkpointer and interrupt_before=[human_gateway node ids]
 
 Write a test that builds a graph from the _template.yml workflow and verifies it is a CompiledGraph.
-```
 
 **Verify the following is Done:**
 - _template.yml workflow compiles to a runnable LangGraph graph
 - Condition evaluator rejects unsafe expressions (test: `"__import__('os')"` raises SecurityError)
 - `mypy` passes
+```
 
 ---
 
@@ -691,12 +691,12 @@ Write `tests/integration/test_checkpoint_recovery.py`:
 - Verify checkpoint was saved with current_node = "node_3"
 - Call resume_from_checkpoint
 - Verify workflow completes from node 4, not node 1
-```
 
 **Verify the following is Done:**
 - Integration test passes (requires Docker Compose postgres)
 - Checkpoint survives process restart (verified by separate test process)
 - `mypy` passes
+```
 
 ---
 
