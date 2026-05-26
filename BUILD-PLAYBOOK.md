@@ -422,6 +422,8 @@ Write one unit test in `tests/unit/test_logging.py` that verifies:
 - `from clinical_ai_shared.observability.logging import get_logger` works
 - Middleware importable
 - Unit test passes
+
+Then commit all changes
 ```
 
 ---

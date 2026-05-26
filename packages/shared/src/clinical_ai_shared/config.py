@@ -39,6 +39,10 @@ class NotificationSettings:
     notification_email: Optional[str]
 
 class Settings(BaseSettings):
+    # System
+    debug: bool = Field(alias="DEBUG", default=False)
+    log_level: str = Field(alias="LOG_LEVEL", default="INFO")
+
     # LLM
     anthropic_api_key: str = Field(alias="ANTHROPIC_API_KEY")
 
