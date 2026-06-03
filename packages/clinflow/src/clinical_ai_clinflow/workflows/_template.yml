@@ -1,0 +1,91 @@
+# _template.yml — ClinFlow workflow definition template
+#
+# Copy this file, remove the leading underscore from the new name, and fill in
+# the details for your workflow. Files starting with `_` are ignored by
+# list_workflows() and are treated as templates.
+#
+# Validation rules enforced at parse time:
+#   - Every node ID referenced in `edges` must appear in `nodes`.
+#   - At least one node must have no outgoing edges (terminal), OR at least one
+#     edge must point to the sentinel value "END".
+#   - Agent nodes (type: agent) must include an `agent` field.
+
+name: example_workflow
+version: "1.0"
+description: "Template workflow definition — rename me and fill in real agents"
+
+# state_schema defines the fields available on the shared LangGraph state dict.
+# Keys are field names; values are Python type hint strings (used for documentation
+# and runtime type coercion hints — not enforced at the YAML layer).
+state_schema:
+  input_data: str
+  classification: str | null
+  extraction_result: dict | null
+  validation_result: dict | null
+  confidence: float
+
+nodes:
+  # Agent nodes — must specify `agent` (the callable agent key registered in the
+  # workflow engine's agent registry).
+  - id: classify
+    agent: intake_agent
+    timeout_seconds: 30
+    retry:
+      max_attempts: 2
+      backoff_seconds: 5
+
+  - id: extract
+    agent: extraction_agent
+    timeout_seconds: 60
+
+  - id: validate
+    agent: validation_agent
+    timeout_seconds: 30
+
+  # Human-in-the-loop gateway — pauses execution and waits for a human approval
+  # decision before continuing.  The workflow engine sends a notification and then
+  # calls interrupt_before on this node (LangGraph HITL pattern).
+  - id: human_review
+    type: human_gateway
+    assignee_role: clinical_reviewer
+    notification:
+      channel: slack
+      message: "Low-confidence extraction needs review"
+
+  - id: report
+    agent: report_agent
+    timeout_seconds: 30
+    # No outgoing edges → this is the terminal node.
+
+edges:
+  # Unconditional edges — always taken.
+  - from: classify
+    to: extract
+
+  - from: extract
+    to: validate
+
+  # Conditional edges — `condition` is a Python expression evaluated against the
+  # current workflow state dict.  Only ONE outgoing conditional edge fires per
+  # transition; add an explicit "else" edge last so every path is covered.
+  - from: validate
+    to: report
+    condition: "state['validation_result']['status'] == 'PASS'"
+
+  - from: validate
+    to: human_review
+    condition: "state['validation_result']['status'] == 'FAIL' and state['confidence'] >= 0.5"
+
+  - from: validate
+    to: extract
+    condition: "state['validation_result']['status'] == 'FAIL' and state['confidence'] < 0.5"
+    max_loops: 2   # Safety cap — prevents infinite re-extraction loops.
+
+  # Human gateway resolution edges.
+  - from: human_review
+    to: report
+    condition: "approved"
+
+  - from: human_review
+    to: extract
+    condition: "rejected"

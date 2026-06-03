@@ -5,6 +5,7 @@ description = "ClinFlow orchestration package for Clinical AI Platform"
 requires-python = ">=3.12"
 dependencies = [
     "clinical-ai-shared",
+    "pyyaml>=6.0.2",
 ]
 
 [build-system]
