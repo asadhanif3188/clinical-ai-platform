@@ -712,7 +712,7 @@ Then commit all changes
 ---
 
 ### Task 1.5 — Human Approval Gateway
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
