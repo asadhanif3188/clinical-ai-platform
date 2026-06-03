@@ -545,7 +545,7 @@ Then commit all changes
 ---
 
 ### Task 1.1 — YAML Workflow Definition + Parser
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
@@ -1774,7 +1774,7 @@ Create the Chainlit application in `ui/`:
 
 3. `ui/handlers/document_upload.py`:
    - Detect PDF file attachment
-   - Show `cl.Step("Uploading document...")` 
+   - Show `cl.Step("Uploading document...")`
    - POST to FastAPI /api/v1/triage/submit
    - Poll /api/v1/triage/{job_id} with cl.Step updates per node:
      - "Classifying document type..."
