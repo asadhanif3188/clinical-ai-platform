@@ -32,8 +32,8 @@ Each task contains a ready-to-paste prompt and a checkbox to track progress.
 - [x] 0.10 Ruff + mypy + pre-commit
 
 ### Phase 1 — ClinFlow AI (Orchestration Engine)
-- [ ] 1.1 YAML workflow definition + parser
-- [ ] 1.2 Workflow execution engine
+- [x] 1.1 YAML workflow definition + parser
+- [x] 1.2 Workflow execution engine
 - [ ] 1.3 LangGraph graph builder from YAML
 - [ ] 1.4 Dynamic routing logic
 - [ ] 1.5 Checkpoint persistence (PostgreSQL)
@@ -587,7 +587,7 @@ Then commit all changes
 ---
 
 ### Task 1.2 — Workflow Execution Engine
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
