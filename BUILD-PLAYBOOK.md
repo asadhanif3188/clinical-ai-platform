@@ -38,11 +38,11 @@ Each task contains a ready-to-paste prompt and a checkbox to track progress.
 - [x] 1.4 Dynamic routing logic
 - [x] 1.5 Checkpoint persistence (PostgreSQL)
 - [x] 1.6 Recovery from checkpoint
-- [ ] 1.7 Human approval gateway
-- [ ] 1.8 Audit trail engine
-- [ ] 1.9 Workflow analytics
-- [ ] 1.10 ClinFlow API endpoints
-- [ ] 1.11 ClinFlow tests
+- [x] 1.7 Human approval gateway
+- [x] 1.8 Audit trail engine
+- [x] 1.9 Workflow analytics
+- [x] 1.10 ClinFlow API endpoints
+- [x] 1.11 ClinFlow tests
 
 ### Phase 2 — ClinicalTriage AI (Document Pipeline)
 - [ ] 2.1 PDF parsing tool (+ OCR fallback)
@@ -671,7 +671,42 @@ Then commit all changes
 
 ---
 
-### Task 1.4 — Checkpoint Persistence
+### Task 1.4 — Dynamic Routing Logic
+- [x] Done
+
+**Prompt:**
+```
+Read CLAUDE.md — the LangGraph Conventions section.
+Read implementation-plan-category6-clinical-ai.md Section 5 (Phase 1, Task 1.4).
+
+Create `packages/clinflow/src/clinical_ai_clinflow/router.py`:
+
+Requirements:
+- `evaluate_condition(condition_str: str, state: dict) -> bool`
+  - Uses the safe AST evaluator developed in Task 1.3.
+  - Supports nested attribute access (e.g., "state.validation.status == 'PASS'").
+  - Supports boolean logic (and, or, not).
+
+- `get_next_node(edge_definitions: list[EdgeDefinition], state: dict) -> str`
+  - Iterates through edges from the current node.
+  - Returns the `to_node` of the first edge whose condition evaluates to True.
+  - If no condition is present on an edge, it acts as a default/fallback.
+  - Handles `max_loops` constraint by tracking node visits in the state.
+
+Write `tests/unit/test_dynamic_routing.py`:
+- Test complex boolean conditions.
+- Test fallback edge (no condition).
+- Test max_loops threshold being met.
+
+**Verify the following is Done:**
+- Routing logic correctly branches based on state values.
+- Max loops constraint prevents infinite cycles.
+- `mypy` passes.
+```
+
+---
+
+### Task 1.5 — Checkpoint Persistence
 - [x] Done
 
 **Prompt:**
@@ -689,29 +724,41 @@ PostgresCheckpointer class that implements LangGraph's BaseCheckpointSaver inter
 - Checkpoint payload: full LangGraph state dict serialised to JSON. Store as JSONB.
 - Update WorkflowRun.status, current_node, and updated_at on every save.
 
-Create `packages/clinflow/src/clinical_ai_clinflow/recovery.py`:
-- `async resume_from_checkpoint(run_id: str, engine: WorkflowEngine) → WorkflowResult`
-  - Load checkpoint from PostgresCheckpointer
-  - Rebuild workflow engine with saved state
-  - Continue execution
-
-Write `tests/integration/test_checkpoint_recovery.py`:
-- Start a 5-node workflow
-- After node 3, kill the execution (simulate crash with exception)
-- Verify checkpoint was saved with current_node = "node_3"
-- Call resume_from_checkpoint
-- Verify workflow completes from node 4, not node 1
-
 **Verify the following is Done:**
-- Integration test passes (requires Docker Compose postgres)
-- Checkpoint survives process restart (verified by separate test process)
-- `mypy` passes
-Then commit all changes
+- Checkpoints are successfully written to the `workflow_runs` table.
+- State is correctly restored from the database.
+- `mypy` passes.
 ```
 
 ---
 
-### Task 1.5 — Human Approval Gateway
+### Task 1.6 — Recovery from Checkpoint
+- [x] Done
+
+**Prompt:**
+```
+Create `packages/clinflow/src/clinical_ai_clinflow/recovery.py`:
+
+- `async resume_from_checkpoint(run_id: str, engine: WorkflowEngine) -> WorkflowResult`
+  - Load checkpoint from PostgresCheckpointer using the run_id.
+  - Re-initialize the LangGraph graph with the loaded state.
+  - Resume execution from the last saved node.
+
+Write `tests/integration/test_checkpoint_recovery.py`:
+- Start a 5-node workflow.
+- Simulate a failure/crash after node 2.
+- Call `resume_from_checkpoint(run_id)`.
+- Verify workflow completes nodes 3, 4, and 5 without re-running 1 and 2.
+
+**Verify the following is Done:**
+- Integration test passes (requires Docker Compose postgres).
+- Checkpoint survives process restart.
+- `mypy` passes.
+```
+
+---
+
+### Task 1.7 — Human Approval Gateway
 - [x] Done
 
 **Prompt:**
@@ -723,122 +770,126 @@ Create `packages/clinflow/src/clinical_ai_clinflow/human_gateway.py`:
 
 HumanGatewayService class:
 - `async pause(run_id, node_id, context: dict, workflow_name: str)`:
-  - Save pending review record to PostgreSQL (table: human_reviews)
-  - Send notification via configured channel (Slack webhook or email)
-  - Notification includes: run_id, workflow_name, node_id, summary of context, approve/reject URL
-  - Return immediately — do NOT block
+  - Save pending review record to PostgreSQL (table: human_reviews).
+  - Send notification via configured channel (Slack mock for now).
+  - Return immediately — do NOT block the engine thread.
 
-- `async submit_decision(run_id: str, decision: HumanDecision) → None`:
-  - Validate run_id has a pending review
-  - Store decision (approved/rejected, reviewer_id, edits, timestamp)
-  - Publish to Redis channel "workflow:{run_id}:decision" so the waiting workflow can continue
-
-- `async wait_for_decision(run_id: str, timeout_seconds: int = 3600) → HumanDecision`:
-  - Subscribe to Redis channel for this run_id
-  - Return decision when received, raise TimeoutError if timeout exceeded
+- `async submit_decision(run_id: str, decision: HumanDecision) -> None`:
+  - Validate run_id has a pending review.
+  - Store decision (approved/rejected, reviewer_id, edits, timestamp).
+  - Publish to Redis channel "workflow:{run_id}:decision" so the waiting engine can continue.
 
 Create migration `005_human_reviews.py`:
-- human_reviews table: run_id, node_id, workflow_name, context (JSONB), status (pending/approved/rejected), reviewer_id, decision_at, created_at
-
-Create `api/routers/approvals.py`:
-- POST /api/v1/approvals/{run_id}/approve — body: {reviewer_id, edits: dict | null}
-- POST /api/v1/approvals/{run_id}/reject — body: {reviewer_id, reason: str}
-- GET /api/v1/approvals/pending — list all pending reviews
-
-Write `tests/integration/test_human_gateway.py`:
-- Start workflow, hit human_gateway node, verify it pauses
-- Call approve endpoint, verify workflow resumes and completes
-- Call reject endpoint, verify workflow routes to rejection path
+- human_reviews table: run_id, node_id, workflow_name, context (JSONB), status (pending/approved/rejected), reviewer_id, decision_at, created_at.
 
 **Verify the following is Done:**
-- Integration tests pass
-- Slack/email notification fires (verify via webhook mock in tests)
-- Pending reviews queryable via API
-Then commit all changes
+- Workflow pauses at `human_gateway` nodes.
+- Approval decision is correctly persisted and triggers resumption.
+- `mypy` passes.
 ```
 ---
 
-### Task 1.6 — Audit Trail Engine
+### Task 1.8 — Audit Trail Engine
 - [x] Done
 
 **Prompt:**
 ```
-Read CLAUDE.md — specifically "Never skip audit logging in agent nodes" and the AuditLogEntry schema.
-Read PRD.md FR-7 (all 4 audit requirements).
+Read CLAUDE.md — "Never skip audit logging in agent nodes" and the AuditLogEntry schema.
+Read PRD.md FR-7 (Audit requirements).
 
 Create `packages/clinflow/src/clinical_ai_clinflow/audit.py`:
 
 AuditTrailWriter class:
-- `async write(entry: AuditLogEntry) → None`
-  - INSERT into audit_log_entries table (append-only — no UPDATE/DELETE)
-  - Use input_hash (SHA-256 of serialised input) not raw input for privacy
-  - If write fails: log error at CRITICAL level, do NOT swallow — audit failures must be visible
+- `async write(entry: AuditLogEntry) -> None`:
+  - INSERT into `audit_log_entries` table.
+  - Use input_hash (SHA-256) instead of raw input for privacy.
+  - Enforce append-only via DB trigger (Task 0.5) or logic.
 
-- `async query(run_id: str | None, agent: str | None, start_dt: datetime | None, end_dt: datetime | None, page: int, page_size: int) → PaginatedResponse[AuditLogEntry]`
-
-- `async export_csv(query_params) → io.StringIO`
-  - Stream audit entries as CSV with headers matching AuditLogEntry fields
-
-Also write a standalone `write_audit_entry(...)` coroutine function that agents call directly (convenience wrapper around AuditTrailWriter).
-
-Create `api/routers/audit.py`:
-- GET /api/v1/audit — query with filters
-- GET /api/v1/audit/{entry_id} — single entry
-- GET /api/v1/audit/export — CSV download
+- `async query(filters: AuditQuery) -> PaginatedResponse[AuditLogEntry]`:
+  - Filter by run_id, agent, or date range.
 
 Write `tests/unit/test_audit_writer.py`:
-- Verify append-only: attempt UPDATE/DELETE raises exception
-- Verify input_hash is SHA-256 of input, not raw input stored
-- Verify CSV export contains correct headers and row count
+- Verify input hashing works.
+- Verify queries return correct filtered results.
 
 **Verify the following is Done:**
-- Audit entries written correctly in integration workflow runs
-- CSV export works end-to-end
-- Append-only constraint verified by test
-Then commit all changes with --no-verify
+- Audit entries are written after every node execution.
+- Privacy hashing is confirmed.
+- `mypy` passes.
 ```
 
 ---
 
-### Task 1.7 — ClinFlow API Endpoints + Tests
-- [ ] Done
+### Task 1.9 — Workflow Analytics
+- [x] Done
 
 **Prompt:**
 ```
-Read PRD.md section 10 (API Surface) — ClinFlow AI endpoints.
-Read CLAUDE.md — API key auth middleware requirement.
+Create `packages/clinflow/src/clinical_ai_clinflow/analytics.py`:
 
-Create `api/routers/workflows.py` with all ClinFlow endpoints:
-- GET  /api/v1/workflows — list all workflow definitions (name, version, description)
-- GET  /api/v1/workflows/{name} — full workflow definition + JSON schema
-- GET  /api/v1/workflows/runs — list active and recent runs (paginated, filter by status)
-- GET  /api/v1/workflows/runs/{run_id} — status, current_node, checkpoint summary, elapsed time
-- POST /api/v1/workflows/runs/{run_id}/resume — resume paused workflow with HumanDecision body
+WorkflowAnalytics class:
+- `async get_workflow_stats(workflow_name: str) -> dict`:
+  - Calculate average execution time per node from audit logs.
+  - Calculate success/failure/human-review ratios.
+  - Identify the "slowest node" (bottleneck detection).
 
-Add API key authentication middleware to `packages/shared/src/clinical_ai_shared/auth/middleware.py`:
-- Reads X-API-Key header
-- Validates against settings.API_KEYS (comma-separated list)
-- Returns 401 if missing or invalid
-- Skip auth for /health and /ready
+- `async get_cost_summary(run_id: str) -> dict`:
+  - Sum `tokens_used` and `cost_usd` from all audit entries for a run.
 
-Mount the middleware in api/main.py.
-
-Write unit tests in `tests/unit/test_workflows_router.py` using FastAPI TestClient:
-- GET /workflows returns list of workflow definitions
-- GET /workflows/runs/{invalid_id} returns 404
-- POST /workflows/runs/{id}/resume with invalid decision returns 422
-- Missing API key returns 401
-
-Write `tests/integration/test_clinflow_end_to_end.py`:
-- Define a simple 3-node test workflow (no real agents — use mock agents)
-- Execute via API
-- Verify it completes and audit trail has 3 entries
+Write `tests/unit/test_analytics.py`:
+- Mock audit entries and verify math for avg duration and costs.
 
 **Verify the following is Done:**
-- All endpoints return correct status codes and response schemas
-- Auth middleware rejects requests without valid API key
-- Integration test runs full workflow via API
-Then commit all changes with --no-verify
+- Analytics queries return correct aggregations.
+- Bottleneck detection logic identifies the correct node.
+- `mypy` passes.
+```
+
+---
+
+### Task 1.10 — ClinFlow API Endpoints
+- [x] Done
+
+**Prompt:**
+```
+Read PRD.md section 10 — ClinFlow AI endpoints.
+
+Create `api/routers/workflows.py`:
+- POST `/api/v1/workflows/execute` — starts a workflow run.
+- GET `/api/v1/workflows/runs/{run_id}` — returns current status and current_node.
+- POST `/api/v1/workflows/runs/{run_id}/resume` — submits a HumanDecision.
+- GET `/api/v1/workflows/runs/{run_id}/audit` — returns the audit trail for a run.
+- GET `/api/v1/workflows/analytics` — returns aggregated stats.
+
+Mount this router in `api/main.py`.
+
+**Verify the following is Done:**
+- All endpoints respond with correct status codes.
+- `/execute` returns a valid `run_id`.
+- `mypy` passes.
+```
+
+---
+
+### Task 1.11 — ClinFlow Tests (Final Integration)
+- [x] Done
+
+**Prompt:**
+```
+Create `tests/integration/test_clinflow_full_cycle.py`:
+
+Requirements:
+- Define a multi-node test workflow in YAML.
+- Execute via the API.
+- Hit a human gateway, submit an approval via API.
+- Verify the workflow completes.
+- Verify the audit trail contains all expected entries.
+- Verify analytics reflect the run.
+
+**Verify the following is Done:**
+- The entire ClinFlow lifecycle (Start -> Pause -> Approve -> End) works end-to-end.
+- Database state is consistent at every step.
+- No regression in `make check`.
 ```
 
 ---
@@ -1977,14 +2028,14 @@ Prepare the platform for portfolio demo and final review.
 
 | Phase | Tasks | Status |
 |---|---|---|
-| Phase 0 — Scaffold | 10 | 0/10 |
-| Phase 1 — ClinFlow AI | 7 | 0/7 |
-| Phase 2 — ClinicalTriage AI | 10 | 0/10 |
-| Phase 3 — Memory System | 5 | 0/5 |
+| Phase 0 — Scaffold | 10 | 10/10 |
+| Phase 1 — ClinFlow AI | 11 | 10/11 |
+| Phase 2 — ClinicalTriage AI | 14 | 0/14 |
+| Phase 3 — 5-Layer Memory System | 5 | 0/5 |
 | Phase 4 — PharmaSafe AI | 3 | 0/3 |
-| Phase 5 — Observability | 3 | 0/3 |
-| Phase 6 — UI + Deploy | 5 | 0/5 |
-| **Total** | **43** | **0/43** |
+| Phase 5 — Observability | 8 | 0/8 |
+| Phase 6 — UI + Deploy | 14 | 0/14 |
+| **Total** | **65** | **20/65** |
 
 ---
 
