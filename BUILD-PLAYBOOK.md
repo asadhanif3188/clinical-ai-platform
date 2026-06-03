@@ -35,7 +35,7 @@ Each task contains a ready-to-paste prompt and a checkbox to track progress.
 - [x] 1.1 YAML workflow definition + parser
 - [x] 1.2 Workflow execution engine
 - [x] 1.3 LangGraph graph builder from YAML
-- [ ] 1.4 Dynamic routing logic
+- [x] 1.4 Dynamic routing logic
 - [ ] 1.5 Checkpoint persistence (PostgreSQL)
 - [ ] 1.6 Recovery from checkpoint
 - [ ] 1.7 Human approval gateway
@@ -672,7 +672,7 @@ Then commit all changes
 ---
 
 ### Task 1.4 — Checkpoint Persistence
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
