@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.middleware import CorrelationIdMiddleware, RequestLoggingMiddleware
-from api.routers import approvals, health
+from api.routers import approvals, audit, health
 
 
 @asynccontextmanager
@@ -46,6 +46,7 @@ app.add_middleware(
 # Routers
 app.include_router(health.router)
 app.include_router(approvals.router)
+app.include_router(audit.router)
 
 if __name__ == "__main__":
     import uvicorn
