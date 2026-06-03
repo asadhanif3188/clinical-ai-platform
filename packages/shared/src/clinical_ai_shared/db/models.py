@@ -86,6 +86,25 @@ class LongTermMemoryEntry(Base):
     )
 
 
+class HumanReview(Base):
+    __tablename__ = "human_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    node_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    workflow_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    context: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, server_default="pending")
+    reviewer_id: Mapped[str | None] = mapped_column(String(255))
+    decision_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_human_reviews_run_id", "run_id"),
+        Index("ix_human_reviews_status", "status"),
+    )
+
+
 class ProceduralTemplate(Base):
     __tablename__ = "procedural_templates"
 

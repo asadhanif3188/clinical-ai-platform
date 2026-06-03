@@ -1,8 +1,9 @@
 from collections.abc import AsyncGenerator
 
+from clinical_ai_clinflow.human_gateway import HumanGatewayService
 from clinical_ai_shared.config import Settings
 from clinical_ai_shared.config import get_settings as _get_settings
-from clinical_ai_shared.db.postgres import get_async_session
+from clinical_ai_shared.db.postgres import get_async_session, get_session_factory
 from fastapi import Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +18,14 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 def get_settings() -> Settings:
     """Dependency for application settings."""
     return _get_settings()
+
+
+def get_gateway_service() -> HumanGatewayService:
+    """Dependency for HumanGatewayService."""
+    return HumanGatewayService(
+        session_factory=get_session_factory(),
+        settings=_get_settings(),
+    )
 
 
 class PageParams(BaseModel):

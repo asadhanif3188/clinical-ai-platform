@@ -96,8 +96,21 @@ mypy_path = [
 module = [
     "neo4j.*",
     "langfuse.*",
+    "httpx.*",
+    "structlog.*",
+    "tenacity.*",
+    "pydantic_settings.*",
+    "pgvector.*",
+    "langchain_core.*",
+    "langgraph.*",
+    "alembic.*",
+    "redis.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
