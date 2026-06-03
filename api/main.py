@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+from clinical_ai_shared.auth.middleware import APIKeyMiddleware
 from clinical_ai_shared.config import settings
 from clinical_ai_shared.db.neo4j import close_driver
 from clinical_ai_shared.db.postgres import close_db
@@ -9,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.middleware import CorrelationIdMiddleware, RequestLoggingMiddleware
-from api.routers import approvals, audit, health
+from api.routers import approvals, audit, health, workflows
 
 
 @asynccontextmanager
@@ -32,9 +33,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Middleware
+# Middleware — added in reverse order: last added = outermost (first to run).
+# CORSMiddleware must be outermost so preflight requests are handled before auth.
 app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(APIKeyMiddleware, api_keys=settings.api_keys)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # TODO: Configure from settings
@@ -47,6 +50,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(approvals.router)
 app.include_router(audit.router)
+app.include_router(workflows.router)
 
 if __name__ == "__main__":
     import uvicorn

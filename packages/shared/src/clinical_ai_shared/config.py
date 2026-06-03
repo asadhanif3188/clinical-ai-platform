@@ -83,6 +83,10 @@ class Settings(BaseSettings):
     slack_webhook_url: str | None = Field(alias="SLACK_WEBHOOK_URL", default=None)
     notification_email: str | None = Field(alias="NOTIFICATION_EMAIL", default=None)
 
+    # Security — comma-separated API keys, e.g. "key1,key2".
+    # Empty list = no auth enforced (dev / test mode).
+    api_keys: list[str] = Field(alias="API_KEYS", default_factory=list)
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @property
@@ -142,6 +146,13 @@ class Settings(BaseSettings):
     def validate_cors_origins(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
+
+    @field_validator("api_keys", mode="before")
+    @classmethod
+    def validate_api_keys(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            return [k.strip() for k in v.split(",") if k.strip()]
         return v
 
 
