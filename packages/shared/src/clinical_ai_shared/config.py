@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # System
     debug: bool = Field(alias="DEBUG", default=False)
     log_level: str = Field(alias="LOG_LEVEL", default="INFO")
+    cors_origins: list[str] = Field(
+        alias="CORS_ORIGINS",
+        default_factory=lambda: ["http://localhost:3000", "http://localhost:8000"],
+    )
 
     # LLM
     anthropic_api_key: str = Field(alias="ANTHROPIC_API_KEY")
@@ -131,6 +135,13 @@ class Settings(BaseSettings):
     def validate_redis_url(cls, v: str) -> str:
         if not v.startswith("redis://"):
             raise ValueError("REDIS_URL must start with 'redis://'")
+        return v
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def validate_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
 
