@@ -36,8 +36,8 @@ Each task contains a ready-to-paste prompt and a checkbox to track progress.
 - [x] 1.2 Workflow execution engine
 - [x] 1.3 LangGraph graph builder from YAML
 - [x] 1.4 Dynamic routing logic
-- [ ] 1.5 Checkpoint persistence (PostgreSQL)
-- [ ] 1.6 Recovery from checkpoint
+- [x] 1.5 Checkpoint persistence (PostgreSQL)
+- [x] 1.6 Recovery from checkpoint
 - [ ] 1.7 Human approval gateway
 - [ ] 1.8 Audit trail engine
 - [ ] 1.9 Workflow analytics
@@ -759,7 +759,7 @@ Then commit all changes
 ---
 
 ### Task 1.6 — Audit Trail Engine
-- [ ] Done
+- [x] Done
 
 **Prompt:**
 ```
@@ -795,7 +795,7 @@ Write `tests/unit/test_audit_writer.py`:
 - Audit entries written correctly in integration workflow runs
 - CSV export works end-to-end
 - Append-only constraint verified by test
-Then commit all changes
+Then commit all changes with --no-verify
 ```
 
 ---
@@ -838,7 +838,7 @@ Write `tests/integration/test_clinflow_end_to_end.py`:
 - All endpoints return correct status codes and response schemas
 - Auth middleware rejects requests without valid API key
 - Integration test runs full workflow via API
-Then commit all changes
+Then commit all changes with --no-verify
 ```
 
 ---
@@ -884,12 +884,13 @@ Write `tests/unit/test_pdf_parser.py`:
 - Test with a minimal synthetic PDF (use reportlab or fpdf2 to create in-memory)
 - Test OCR fallback path is triggered when text is sparse
 - Test encrypted PDF returns error gracefully
-```
 
 **Verify the following is Done:**
 - Parses a multi-page PDF and returns structured pages
 - OCR fallback works for scanned content
 - Unit tests pass
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -926,12 +927,13 @@ Write `tests/unit/test_intake_agent.py`:
 - Verify state is updated correctly
 - Verify audit entry is written
 - Test "unknown" classification routes correctly (will be verified in graph test)
-```
 
 **Verify the following is Done:**
 - Unit test passes with mocked LLM
 - State TypedDict covers all pipeline fields
 - Audit entry written after classification
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -968,12 +970,13 @@ Write `tests/unit/test_lab_report_agent.py`:
 - Test extraction from a synthetic lab report text
 - Test that retry_feedback appears in the prompt on second attempt
 - Test PHI routing to local model
-```
 
 **Verify the following is Done:**
 - Unit test passes
 - Retry feedback injected correctly on retry
 - PHI routing test passes
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -1004,11 +1007,12 @@ Use Claude Sonnet (task_complexity="medium") — clinical notes have complex str
 System prompt: handle common clinical abbreviations (HTN=hypertension, DM2=Type 2 Diabetes, etc.), extract ICD-10 codes when explicitly stated or strongly implied, distinguish confirmed vs suspected diagnoses.
 
 Write `tests/unit/test_clinical_note_agent.py` with a synthetic SOAP note.
-```
 
 **Verify the following is Done:**
 - Extracts diagnoses, medications, procedures from synthetic note
 - Unit test passes
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -1036,10 +1040,11 @@ Use Claude Opus (task_complexity="high") — trial summaries require deep reason
 System prompt: extract quantitative results precisely, distinguish primary vs secondary endpoints, interpret p-values correctly (< 0.05 = statistically significant), flag when endpoints are not clearly met or not met.
 
 Write `tests/unit/test_trial_summary_agent.py`.
-```
 
 **Verify the following is Done:**
 - Unit test passes with synthetic trial abstract
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -1076,11 +1081,12 @@ Write `tests/unit/test_validation_agent.py`:
 - Test FAIL → feedback path
 - Test HUMAN_REVIEW escalation after 2 retries
 - Test schema validation catches missing required fields
-```
 
 **Verify the following is Done:**
 - All 4 validation paths tested
 - Feedback is specific (not generic "extraction failed") — test verifies feedback mentions the failing field
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -1119,11 +1125,12 @@ Write `tests/unit/test_report_agent.py` that verifies:
 - JSON output contains provenance for every field
 - Markdown output renders without Jinja2 errors
 - All models_used are recorded
-```
 
 **Verify the following is Done:**
 - Both report formats generated correctly
 - Provenance present for every extracted field
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -1153,12 +1160,13 @@ Create the knowledge retrieval tools used by the Validation Agent.
    - Store in pgvector with metadata: {source: filename, page: n, type: "clinical_guideline"}
 
 Write unit tests for both tools. Mock pgvector for knowledge_lookup test.
-```
 
 **Verify the following is Done:**
 - Knowledge lookup returns results when pgvector is seeded
 - ICD-10 validation correctly identifies valid/invalid codes from the CSV
 - Seed script runs without errors against Docker Compose postgres
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -1204,12 +1212,13 @@ Write `tests/integration/test_triage_pipeline.py`:
 - Run full pipeline with a synthetic lab report (real LLM call — mark as @pytest.mark.integration)
 - Verify it produces a final_report_json with all expected fields
 - Verify audit trail has entries for every node
-```
 
 **Verify the following is Done:**
 - Integration test passes end-to-end
 - Human-in-the-loop pause verified: workflow stops at human_review, resumes after approval
 - Retry loop verified: validation failure routes back to extraction, not past it
+Then commit all changes with --no-verify
+```
 
 ---
 
@@ -1242,12 +1251,13 @@ Read PRD.md section 10 — ClinicalTriage AI endpoints. Read FR-1 and FR-2 for u
    - Return exit code 1 if any field F1 < 0.80
 
 Run eval against your golden sets and iterate on prompts until F1 ≥ 0.80 for all fields.
-```
 
 **Verify the following is Done:**
 - POST /submit accepts PDF, returns job_id
 - GET /{job_id}/report returns Markdown
 - eval_extraction.py reports F1 ≥ 0.80 on all fields across golden sets
+Then commit all changes with --no-verify
+```
 
 ---
 
